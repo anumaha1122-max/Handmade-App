@@ -370,6 +370,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useShop } from "../../context/ShopContext";
+import { API_BASE_URL } from "../../config/api";
 
 const { width, height } = Dimensions.get("window");
 
@@ -414,7 +415,7 @@ const InputField = ({ label, placeholder, value, onChangeText, secureTextEntry, 
 };
 
 const SellerLoginScreen = ({ navigation }) => {
-  const { loginSeller } = useShop();
+  const { setCurrentSeller, setAuthToken } = useShop();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -441,9 +442,9 @@ const SellerLoginScreen = ({ navigation }) => {
     ).start();
   }, []);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email.trim()) {
-      Alert.alert("Required", "Please enter email or phone number.");
+      Alert.alert("Required", "Please enter email.");
       return;
     }
     if (!password) {
@@ -453,43 +454,57 @@ const SellerLoginScreen = ({ navigation }) => {
 
     setLoading(true);
 
-    setTimeout(() => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/seller/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emailOrPhone: email.trim(), password }),
+      });
+
+      // ✅ Always parse JSON regardless of status code
+      const data = await response.json();
+
+      if (response.ok && data.success && data.token) {
+        // ✅ FIX: Backend wraps seller fields inside data.data, not at data root
+        const sellerInfo = data.data || {};
+        setAuthToken(data.token);
+        setCurrentSeller({
+          id: sellerInfo.id,
+          email: sellerInfo.email || email.trim(),
+          name: sellerInfo.fullName || email.trim(),
+          shopName: sellerInfo.shopName || "My Shop",
+          businessType: sellerInfo.businessType || "",
+          approvalStatus: sellerInfo.approvalStatus || "APPROVED",
+        });
+        navigation.replace("SellerTabs");
+      } else {
+        // ✅ FIX: Handle PENDING / REJECTED status codes from backend 403 response
+        const status = data.status; // "PENDING" or "REJECTED"
+        const msg = data.message || "Invalid credentials. Please try again.";
+
+        if (status === "PENDING") {
+          Alert.alert(
+            "⏳ Awaiting Approval",
+            "Your seller account is pending admin review. You will be notified once approved (usually 1–2 business days)."
+          );
+        } else if (status === "REJECTED") {
+          Alert.alert(
+            "❌ Application Rejected",
+            msg
+          );
+        } else {
+          Alert.alert("Login Failed", msg);
+        }
+      }
+    } catch (err) {
+      console.error("[SellerLogin] Network error:", err);
+      Alert.alert(
+        "Connection Error",
+        "Could not reach the server. Make sure your phone and computer are on the same Wi-Fi network and the backend is running."
+      );
+    } finally {
       setLoading(false);
-
-      // ✅ Use ShopContext loginSeller
-      const result = loginSeller(email.trim(), password);
-
-      if (!result) {
-        Alert.alert("Login Failed", "Invalid credentials. Please try again.");
-        return;
-      }
-
-      // ✅ Check if seller is still PENDING approval
-      if (result.error === "pending") {
-        Alert.alert(
-          "Account Pending ⏳",
-          result.message || "Your account is pending admin approval. You will be notified once approved.",
-          [{ text: "OK" }]
-        );
-        return;
-      }
-
-      // ✅ Check if not found
-      if (result.error === "not_found") {
-        Alert.alert(
-          "Login Failed",
-          result.message || "No account found with these credentials. Please register first.",
-          [
-            { text: "Register", onPress: () => navigation.navigate("SellerRegistrationScreen") },
-            { text: "Try Again", style: "cancel" },
-          ]
-        );
-        return;
-      }
-
-      // ✅ Success — navigate to seller dashboard
-      navigation.replace("SellerTabs");
-    }, 1200);
+    }
   };
 
   return (

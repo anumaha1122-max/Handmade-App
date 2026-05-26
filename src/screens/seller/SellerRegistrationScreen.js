@@ -723,6 +723,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import { useShop } from "../../context/ShopContext";
+import { API_BASE_URL } from "../../config/api";
 
 const C = {
   primary: "#0e3243",
@@ -1080,7 +1081,7 @@ export default function SellerRegistrationScreen({ navigation }) {
     return null;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const err = validateStep();
     if (err) {
       Alert.alert("Required", err);
@@ -1094,49 +1095,77 @@ export default function SellerRegistrationScreen({ navigation }) {
     // Step 5 — Submit
     setLoading(true);
 
-    setTimeout(() => {
-      try {
-        // Build structured documents array
-        const structuredDocs = DOC_FIELDS.map((field) => ({
-          title: field.title,
-          type: field.type,
-          uri: docs[field.key]?.uri || null,
-          fileName: docs[field.key]?.fileName || null,
-          verified: false, // admin will verify
-        })).filter((d) => d.uri !== null);
+    try {
+      const formData = new FormData();
+      formData.append("fullName", personal.fullName.trim());
+      formData.append("email", personal.email.trim());
+      formData.append("phone", personal.phone.trim());
+      formData.append("password", personal.password);
+      formData.append("shopName", business.shopName.trim());
+      formData.append("businessType", business.businessType);
+      formData.append("gst", business.gst.trim());
+      formData.append("description", business.description.trim());
+      formData.append("address1", address.address1.trim());
+      formData.append("address2", address.address2.trim());
+      formData.append("city", address.city.trim());
+      formData.append("state", address.state);
+      formData.append("pin", address.pin.trim());
 
-        registerSeller({
-          name: personal.fullName.trim(),
-          shopName: business.shopName.trim(),
-          email: personal.email.trim(),
-          phone: personal.phone.trim(),
-          password: personal.password,
-          category: business.businessType,
-          gst: business.gst.trim(),
-          description: business.description.trim(),
-          address: {
-            address1: address.address1.trim(),
-            address2: address.address2.trim(),
-            city: address.city.trim(),
-            state: address.state,
-            pin: address.pin.trim(),
-          },
-          documents: structuredDocs,
+      // Append files
+      if (docs.aadhar) {
+        formData.append("aadharFile", {
+          uri: docs.aadhar.uri,
+          name: docs.aadhar.fileName || "aadhar.jpg",
+          type: "image/jpeg",
         });
+      }
+      if (docs.pan) {
+        formData.append("panFile", {
+          uri: docs.pan.uri,
+          name: docs.pan.fileName || "pan.jpg",
+          type: "image/jpeg",
+        });
+      }
+      if (docs.businessProof) {
+        formData.append("businessProofFile", {
+          uri: docs.businessProof.uri,
+          name: docs.businessProof.fileName || "businessProof.jpg",
+          type: "image/jpeg",
+        });
+      }
+      if (docs.bankDetails) {
+        formData.append("bankDetailsFile", {
+          uri: docs.bankDetails.uri,
+          name: docs.bankDetails.fileName || "bankDetails.jpg",
+          type: "image/jpeg",
+        });
+      }
 
-        setLoading(false);
+      const response = await fetch(`${API_BASE_URL}/api/seller/register`, {
+        method: "POST",
+        body: formData,
+        // React Native fetch with FormData automatically sets the Content-Type to multipart/form-data
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
         setRegistrationComplete(true);
 
         Alert.alert(
           "Registration Submitted! 🎉",
-          "Your application has been sent to the admin for review.\n\nYou will be notified once your account is approved. This usually takes 1–2 business days.",
+          "Your application has been sent to the admin for review.\n\nYou will be notified once your account is approved.",
           [{ text: "OK" }]
         );
-      } catch (error) {
-        setLoading(false);
-        Alert.alert("Error", "Registration failed. Please try again.");
+      } else {
+        Alert.alert("Error", data.error || data.message || "Registration failed. Please try again.");
       }
-    }, 10000); // 10-second loading as required
+    } catch (error) {
+      console.error("Seller Registration Error:", error);
+      Alert.alert("Error", "Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const pickDoc = async (key) => {

@@ -11,6 +11,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
+import { API_BASE_URL } from "../config/api";
 
 const ShopContext = createContext(null);
 
@@ -239,6 +240,9 @@ export function ShopProvider({ children }) {
   ]);
 
   const [currentSeller, setCurrentSeller]                 = useState(null);
+  const [currentCustomer, setCurrentCustomer]             = useState(null);
+  const [currentAdmin, setCurrentAdmin]                   = useState(null);
+  const [authToken, setAuthToken]                         = useState(null);
   const [sellerNotifications, setSellerNotifications]     = useState(initialSellerNotifications);
   const [adminNotifications, setAdminNotifications]       = useState(initialAdminNotifications);
   const [complaints, setComplaints]                       = useState([]);
@@ -1401,6 +1405,13 @@ export function ShopProvider({ children }) {
     customerWallet,
     refundHistory,
     currentSeller,
+    setCurrentSeller,
+    currentCustomer,
+    setCurrentCustomer,
+    currentAdmin,
+    setCurrentAdmin,
+    authToken,
+    setAuthToken,
     commissionRecords,
     totalAdminCommission,
     totalSellerPayout,

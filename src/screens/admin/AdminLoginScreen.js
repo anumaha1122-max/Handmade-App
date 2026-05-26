@@ -957,6 +957,8 @@ import {
   ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useShop } from "../../context/ShopContext";
+import { API_BASE_URL } from "../../config/api";
 
 const C = {
   primary: "#0e3243",
@@ -975,16 +977,35 @@ export default function AdminLoginScreen({ navigation }) {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const { setCurrentAdmin, setAuthToken } = useShop();
+
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please enter email and password");
       return;
     }
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+
+      if (response.ok && data.token) {
+        setAuthToken(data.token);
+        setCurrentAdmin({ email: data.email || email });
+        navigation.replace("AdminTabs");
+      } else {
+        Alert.alert("Login Failed", data.error || "Invalid credentials");
+      }
+    } catch (err) {
+      console.error("Admin login error:", err);
+      Alert.alert("Error", "Network error. Please try again.");
+    } finally {
       setLoading(false);
-      navigation.replace("AdminTabs");
-    }, 1200);
+    }
   };
 
   return (
