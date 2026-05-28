@@ -184,4 +184,34 @@ public class SellerAuthController {
                     .body(ApiResponse.error(rawMessage));
         }
     }
+
+    // ── GET /api/seller/profile ───────────────────────────────────────────
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse> getProfile(
+            @RequestHeader("Authorization") String token
+    ) {
+        try {
+            ApiResponse response = sellerService.getProfile(token);
+            return ResponseEntity.ok(response);
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ApiResponse.error(ex.getReason()));
+        }
+    }
+
+    // ── PUT /api/seller/profile ───────────────────────────────────────────
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse> updateProfile(
+            @RequestHeader("Authorization") String token,
+            @RequestParam(value = "fullName", required = false) String fullName,
+            @RequestParam(value = "shopName", required = false) String shopName,
+            @RequestParam(value = "phone", required = false) String phone,
+            @RequestParam(value = "address", required = false) String address
+    ) {
+        try {
+            ApiResponse response = sellerService.updateProfile(token, fullName, shopName, phone, address);
+            return ResponseEntity.ok(response);
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ApiResponse.error(ex.getReason()));
+        }
+    }
 }

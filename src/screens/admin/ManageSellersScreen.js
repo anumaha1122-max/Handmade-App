@@ -28,92 +28,10 @@ const C = {
   green: "#1a9e6e",
 };
 
-const sellers = [
-  { 
-    id: "1", 
-    name: "Rajesh Kumar", 
-    shop: "Tech Store", 
-    category: "Electronics", 
-    rating: 4.8, 
-    products: 48, 
-    orders: 936, 
-    sales: 485620, 
-    status: "Active", 
-    joined: "10 Mar 2024",
-    email: "rajesh@techstore.com",
-    phone: "+91 98765 43210"
-  },
-  { 
-    id: "2", 
-    name: "Priya Sharma", 
-    shop: "Fashion Hub", 
-    category: "Fashion", 
-    rating: 4.5, 
-    products: 120, 
-    orders: 540, 
-    sales: 320800, 
-    status: "Active", 
-    joined: "15 Jan 2024",
-    email: "priya@fashionhub.com",
-    phone: "+91 97654 32109"
-  },
-  { 
-    id: "3", 
-    name: "Aman Verma", 
-    shop: "Home Needs", 
-    category: "Home & Kitchen", 
-    rating: 4.2, 
-    products: 85, 
-    orders: 320, 
-    sales: 198500, 
-    status: "Active", 
-    joined: "22 Feb 2024",
-    email: "aman@homeneeds.com",
-    phone: "+91 96543 21098"
-  },
-  { 
-    id: "4", 
-    name: "Neha Patel", 
-    shop: "Beauty World", 
-    category: "Beauty & Health", 
-    rating: 4.6, 
-    products: 65, 
-    orders: 412, 
-    sales: 245600, 
-    status: "Active", 
-    joined: "8 Apr 2024",
-    email: "neha@beautyworld.com",
-    phone: "+91 95432 10987"
-  },
-  { 
-    id: "5", 
-    name: "Rohit Singh", 
-    shop: "Sports Zone", 
-    category: "Sports", 
-    rating: 3.9, 
-    products: 42, 
-    orders: 218, 
-    sales: 132000, 
-    status: "Suspended", 
-    joined: "12 Dec 2023",
-    email: "rohit@sportszone.com",
-    phone: "+91 94321 09876"
-  },
-  { 
-    id: "6", 
-    name: "Kavya Nair", 
-    shop: "Daily Essentials", 
-    category: "Grocery", 
-    rating: 4.1, 
-    products: 200, 
-    orders: 680, 
-    sales: 380000, 
-    status: "Active", 
-    joined: "5 Mar 2024",
-    email: "kavya@essentials.com",
-    phone: "+91 93210 98765"
-  },
-];
+import { useShop } from "../../context/ShopContext";
+
+
+
 
 const statusColor = (s) => (s === "Active" ? C.green : C.red);
 const statusBg = (s) => (s === "Active" ? "#e8f5e9" : "#fdecea");
@@ -121,14 +39,18 @@ const statusBg = (s) => (s === "Active" ? "#e8f5e9" : "#fdecea");
 export default function ManageSellersScreen({ navigation }) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
-  const filters = ["All", "Active", "Suspended"];
+  const { pendingSellers = [], approvedSellers = [], rejectedSellers = [] } = useShop();
+const sellers = [...pendingSellers, ...approvedSellers, ...rejectedSellers];
+const filters = ["All", "Active", "Suspended"];
 
   const filtered = sellers.filter((s) => {
+    if (!s) return false;
     const matchFilter = filter === "All" || s.status === filter;
+    const lowerSearch = search.toLowerCase();
     const matchSearch =
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.shop.toLowerCase().includes(search.toLowerCase()) ||
-      s.category.toLowerCase().includes(search.toLowerCase());
+      (s.name ?? "").toLowerCase().includes(lowerSearch) ||
+      (s.shop ?? "").toLowerCase().includes(lowerSearch) ||
+      (s.category ?? "").toLowerCase().includes(lowerSearch);
     return matchFilter && matchSearch;
   });
 
@@ -210,22 +132,22 @@ export default function ManageSellersScreen({ navigation }) {
           >
             <View style={styles.sellerTop}>
               <View style={styles.avatarWrap}>
-                <Text style={styles.avatarText}>{s.name.charAt(0)}</Text>
+                <Text style={styles.avatarText}>{(s.name ?? "").charAt(0)}</Text>
               </View>
               <View style={styles.sellerInfo}>
                 <View style={styles.sellerNameRow}>
-                  <Text style={styles.sellerName}>{s.name}</Text>
+                  <Text style={styles.sellerName}>{s.name ?? ""}</Text>
                   <View style={[styles.statusBadge, { backgroundColor: statusBg(s.status) }]}>
                     <Text style={[styles.statusText, { color: statusColor(s.status) }]}>
                       {s.status}
                     </Text>
                   </View>
                 </View>
-                <Text style={styles.shopName}>{s.shop}</Text>
-                <Text style={styles.category}>{s.category}</Text>
+                <Text style={styles.shopName}>{s.shop ?? ""}</Text>
+                <Text style={styles.category}>{s.category ?? ""}</Text>
                 <View style={styles.ratingRow}>
                   <Ionicons name="star" size={12} color={C.accentOrange} />
-                  <Text style={styles.ratingText}>{s.rating}</Text>
+                  <Text style={styles.ratingText}>{s.rating ?? ""}</Text>
                 </View>
               </View>
               <TouchableOpacity>
@@ -240,12 +162,12 @@ export default function ManageSellersScreen({ navigation }) {
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{s.orders}</Text>
+                <Text style={styles.statValue}>{s.orders ?? 0}</Text>
                 <Text style={styles.statLabel}>Orders</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>₹{(s.sales / 1000).toFixed(0)}K</Text>
+                <Text style={styles.statValue}>₹{((s.sales ?? 0) / 1000).toFixed(0)}K</Text>
                 <Text style={styles.statLabel}>Sales</Text>
               </View>
             </View>

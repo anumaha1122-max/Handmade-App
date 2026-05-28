@@ -965,21 +965,8 @@ export default function ProductListScreen({ route, navigation }) {
 
   // Static/local products
   const localProducts = useMemo(() => {
-    if (selectedCategory === "All") {
-      return Object.entries(CATEGORY_DATA).flatMap(([categoryKey, data]) =>
-        Object.entries(data.subcategories || {}).flatMap(([subKey, rows]) =>
-          makeProducts(categoryKey, subKey, rows)
-        )
-      );
-    }
-    if (selectedSubCategory === "All") {
-      return Object.entries(categoryInfo?.subcategories || {}).flatMap(([subKey, rows]) =>
-        makeProducts(selectedCategory, subKey, rows)
-      );
-    }
-    const rows = categoryInfo?.subcategories?.[selectedSubCategory] || [];
-    return makeProducts(selectedCategory, selectedSubCategory, rows);
-  }, [categoryInfo, selectedCategory, selectedSubCategory]);
+    return []; // Removed dummy data per user request
+  }, []);
 
   // const productsToShow = useMemo(
   //   () => [...sellerProducts, ...localProducts],

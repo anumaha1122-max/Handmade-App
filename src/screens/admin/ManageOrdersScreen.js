@@ -413,6 +413,7 @@ import {
   TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useShop } from "../../context/ShopContext";
 
 const C = {
   primary: "#0e3243",
@@ -428,16 +429,7 @@ const C = {
   green: "#1a9e6e",
 };
 
-const orders = [
-  { id: "ORD12345", date: "30 May 2024, 10:30 AM", customer: "Rahul Sharma", total: 2499, status: "Delivered", product: "Wireless Headphones" },
-  { id: "ORD12344", date: "30 May 2024, 09:15 AM", customer: "Priya Singh", total: 4999, status: "Processing", product: "Smart Watch" },
-  { id: "ORD12343", date: "29 May 2024, 06:45 PM", customer: "Amit Verma", total: 1499, status: "Delivered", product: "Phone Case" },
-  { id: "ORD12342", date: "29 May 2024, 06:20 PM", customer: "Neha Patel", total: 3299, status: "Cancelled", product: "Running Shoes" },
-  { id: "ORD12341", date: "29 May 2024, 04:10 PM", customer: "Rohit Gupta", total: 2199, status: "Delivered", product: "Bluetooth Speaker" },
-  { id: "ORD12340", date: "28 May 2024, 03:30 PM", customer: "Sneha Joshi", total: 5499, status: "Processing", product: "Laptop Stand" },
-  { id: "ORD12339", date: "28 May 2024, 11:00 AM", customer: "Kiran Rao", total: 899, status: "Refunded", product: "USB Cable" },
-  { id: "ORD12338", date: "27 May 2024, 09:45 AM", customer: "Arjun Mehta", total: 7999, status: "Delivered", product: "Tablet" },
-];
+
 
 const statusColor = (s) => {
   if (s === "Delivered") return C.green;
@@ -458,6 +450,7 @@ const statusBg = (s) => {
 export default function ManageOrdersScreen({ navigation }) {
   const [activeFilter, setActiveFilter] = useState("All");
   const [search, setSearch] = useState("");
+  const { orders } = useShop();
   const filters = ["All", "Processing", "Delivered", "Cancelled", "Refunded"];
 
   const filtered = orders.filter((o) => {
@@ -547,7 +540,7 @@ export default function ManageOrdersScreen({ navigation }) {
                 <Text style={styles.customerName}>{o.customer}</Text>
                 <Text style={styles.productName}>{o.product}</Text>
               </View>
-              <Text style={styles.orderTotal}>₹{o.total.toLocaleString()}</Text>
+              <Text style={styles.orderTotal}>₹{o.amount?.toLocaleString()}</Text>
             </View>
           </TouchableOpacity>
         ))}

@@ -1,7 +1,7 @@
 
 // src/screens/customer/CustomerHomeScreen.js
 
-import React, { memo, useCallback } from "react";
+import React, { memo, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -99,50 +99,7 @@ const categories = [
   },
 ];
 
-const products = [
-  {
-    id: "1",
-    name: "Hand Embroidered Kurti",
-    price: "₹899",
-    rating: "4.8",
-    image: IMAGES.kurti,
-  },
-  {
-    id: "2",
-    name: "Homemade Besan Ladoo",
-    price: "₹350",
-    rating: "4.7",
-    image: IMAGES.ladoo,
-  },
-  {
-    id: "3",
-    name: "Handmade Rakhi",
-    price: "₹120",
-    rating: "4.9",
-    image: IMAGES.rakhi,
-  },
-  {
-    id: "4",
-    name: "Homemade Mango Pickle",
-    price: "₹250",
-    rating: "4.6",
-    image: IMAGES.mangoPickle,
-  },
-  {
-    id: "5",
-    name: "Clay Pottery Vase",
-    price: "₹650",
-    rating: "4.8",
-    image: IMAGES.vase,
-  },
-  {
-    id: "6",
-    name: "Handmade Candle Set",
-    price: "₹399",
-    rating: "4.5",
-    image: IMAGES.candleSet,
-  },
-];
+
 
 const FastImage = memo(({ source, style, resizeMode = "cover" }) => (
   <Image
@@ -154,7 +111,14 @@ const FastImage = memo(({ source, style, resizeMode = "cover" }) => (
 ));
 
 export default function CustomerHomeScreen({ navigation }) {
-  const { cartCount, toggleWishlist, isInWishlist } = useShop();
+  const { cartCount, toggleWishlist, isInWishlist, customerVisibleProducts = [], fetchActiveProducts } = useShop();
+
+  // Fetch real products from backend on mount
+  useEffect(() => {
+    fetchActiveProducts();
+  }, [fetchActiveProducts]);
+
+  const products = customerVisibleProducts.slice(0, 6);
 
   const goToNotifications = useCallback(() => {
     navigation.navigate("CustomerNotifications");

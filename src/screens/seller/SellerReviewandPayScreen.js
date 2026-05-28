@@ -1301,6 +1301,7 @@ import {
   StatusBar,
   Platform,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -1365,6 +1366,8 @@ export default function SellerReviewandPayScreen({
   const {
     addSellerProductPending,
     addSellerNotification,
+    authToken,
+    fetchSellerData,
   } = useShop();
 
   const {
@@ -1379,42 +1382,70 @@ export default function SellerReviewandPayScreen({
   const [processing, setProcessing] =
     useState(false);
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     setProcessing(true);
 
-    setTimeout(() => {
-      setProcessing(false);
+    try {
+      // Build multipart form data for product upload
+      const formData = new FormData();
+      formData.append("name", productData.name || "");
+      formData.append("description", productData.description || "");
+      formData.append("price", String(productData.price || 0));
+      formData.append("discountPercent", String(productData.discount || 0));
+      formData.append("stock", String(productData.stock || 0));
+      formData.append("category", productData.category || "");
+      formData.append("subcategory", productData.subcategory || "");
+      formData.append("weight", productData.weight || "");
+      formData.append("size", productData.size || "");
+      formData.append("material", productData.material || "");
+      formData.append("color", productData.color || "");
 
-      // PRODUCT GOES LIVE INSTANTLY
-      if (addSellerProductPending) {
-        addSellerProductPending({
-          ...productData,
-          status: "Live",
-          visibleToCustomer: true,
-          paymentStatus: "Paid",
-          uploadFee: adminCommission,
-          paymentMethod: selectedMethod,
-          paidAt: new Date().toISOString(),
-        });
+      // Attach image if we have one (local URI from ImagePicker)
+      if (productData.image) {
+        const uri = productData.image;
+        const filename = uri.split("/").pop();
+        const ext = filename.split(".").pop()?.toLowerCase() || "jpg";
+        const mimeType = ext === "png" ? "image/png" : "image/jpeg";
+        formData.append("image", { uri, name: filename, type: mimeType });
       }
 
-      // SELLER NOTIFICATION
-      if (addSellerNotification) {
-        addSellerNotification(
-          "Product Published 🎉",
-          `"${productData.name}" is now LIVE for customers.`,
-          "product"
-        );
-      }
+      const API_BASE_URL = "http://192.168.0.101:8080";
+      const res = await fetch(`${API_BASE_URL}/api/products/add`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${authToken}`
+        },
+        body: formData,
+      });
 
-      navigation.replace(
-        "SellerPaymentSuccessScreen",
-        {
+      const json = await res.json();
+
+      if (json.success) {
+        // Notify seller
+        if (addSellerNotification) {
+          addSellerNotification(
+            "Product Published 🎉",
+            `"${productData.name}" is now LIVE for customers.`,
+            "product"
+          );
+        }
+
+        // Refresh seller products list
+        if (fetchSellerData) fetchSellerData();
+
+        navigation.replace("SellerPaymentSuccessScreen", {
           productData,
           adminCommission,
-        }
-      );
-    }, 2200);
+        });
+      } else {
+        Alert.alert("Upload Failed", json.message || "Could not publish product. Please try again.");
+      }
+    } catch (err) {
+      console.error("[SellerReviewAndPay] error:", err);
+      Alert.alert("Error", "Network error. Please check your connection.");
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (

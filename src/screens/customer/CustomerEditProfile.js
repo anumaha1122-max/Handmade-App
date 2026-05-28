@@ -19,6 +19,7 @@ import {
 
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import { useShop } from "../../context/ShopContext";
 
 const COLORS = {
   primary: "#062B67",
@@ -48,6 +49,9 @@ export default function CustomerEditProfile({
     location: profileData?.location || "",
     bio: profileData?.bio || "",
   });
+
+  const { updateCustomerProfile } = useShop() || {};
+  const [loading, setLoading] = useState(false);
 
   /* PICK IMAGE */
   const pickImage = async () => {
@@ -103,8 +107,24 @@ export default function CustomerEditProfile({
   };
 
   /* SAVE */
-  const handleSave = () => {
-    const updatedProfile = {
+  const handleSave = async () => {
+    if (!formData.fullName || !formData.phone) {
+      Alert.alert("Error", "Name and Phone are required.");
+      return;
+    }
+    
+    setLoading(true);
+    let updated;
+    if (updateCustomerProfile) {
+      updated = await updateCustomerProfile(formData);
+    }
+    setLoading(false);
+
+    const nextProfile = updated ? {
+      ...updated,
+      name: updated.fullName || updated.name,
+      avatar: profileImage,
+    } : {
       name: formData.fullName,
       email: formData.email,
       phone: formData.phone,
@@ -116,7 +136,7 @@ export default function CustomerEditProfile({
     navigation.navigate(
       "CustomerProfile",
       {
-        updatedProfile,
+        updatedProfile: nextProfile,
       }
     );
   };
@@ -375,16 +395,16 @@ export default function CustomerEditProfile({
             </View>
           </View>
 
-          {/* SAVE */}
           <TouchableOpacity
             activeOpacity={0.9}
-            style={styles.saveButton}
+            style={[styles.saveButton, loading && { opacity: 0.7 }]}
             onPress={handleSave}
+            disabled={loading}
           >
             <Text
               style={styles.saveButtonText}
             >
-              Save Changes
+              {loading ? "Saving..." : "Save Changes"}
             </Text>
           </TouchableOpacity>
         </ScrollView>

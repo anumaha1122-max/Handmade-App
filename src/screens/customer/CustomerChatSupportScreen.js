@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/colors";
+import { useShop } from "../../context/ShopContext";
 
 // ─── Auto-response Bot Logic ─────────────────────────────────────────────────
 const BOT_RESPONSES = {
@@ -117,7 +118,17 @@ function MessageBubble({ chat }) {
 }
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
-export default function CustomerChatSupportScreen({ navigation }) {
+export default function CustomerChatSupportScreen({ navigation, route }) {
+  const {
+    authToken,
+    orders = [],
+    sendMessage: apiSendMessage,
+    fetchChatThread,
+  } = useShop();
+
+  const paramOrderId = route?.params?.orderId || route?.params?.order?.id;
+  const activeOrderId = paramOrderId || orders[0]?.orderId || orders[0]?.id;
+
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isOnline] = useState(true);
@@ -141,48 +152,72 @@ export default function CustomerChatSupportScreen({ navigation }) {
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
+  const loadMessages = async () => {
+    if (authToken && activeOrderId) {
+      const thread = await fetchChatThread(activeOrderId, "CUSTOMER");
+      if (thread && thread.length > 0) {
+        setChatMessages(thread.map((m) => ({
+          id: m.id,
+          text: m.content,
+          isCustomer: m.senderType === "CUSTOMER",
+          time: m.createdAt ? new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+          read: m.isRead,
+        })));
+      }
+    }
+  };
+
+  useEffect(() => {
+    loadMessages();
+    if (authToken && activeOrderId) {
+      const interval = setInterval(loadMessages, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [authToken, activeOrderId]);
+
   useEffect(() => {
     scrollToBottom();
   }, [chatMessages, isTyping]);
 
-  const sendMessage = (text = message) => {
+  const sendMessage = async (text = message) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-
-    const userMsg = {
-      id: Date.now(),
-      text: trimmed,
-      isCustomer: true,
-      time: formatTime(new Date()),
-      read: false,
-    };
-
-    setChatMessages((prev) => [...prev, userMsg]);
+    
     setMessage("");
-    setIsTyping(true);
 
-    // Mark as delivered after 1s
-    setTimeout(() => {
-      setChatMessages((prev) =>
-        prev.map((m) => (m.id === userMsg.id ? { ...m, read: true } : m))
-      );
-    }, 1000);
-
-    // Bot reply after 2s
-    setTimeout(() => {
-      setIsTyping(false);
-      const reply = getBotReply(trimmed);
+    if (authToken && activeOrderId) {
+      // Using real backend
+      await apiSendMessage(activeOrderId, trimmed, "CUSTOMER");
+      await loadMessages();
+    } else {
+      // Offline fallback logic
       setChatMessages((prev) => [
         ...prev,
         {
-          id: Date.now() + 1,
-          text: reply,
-          isCustomer: false,
+          id: Date.now(),
+          text: trimmed,
+          isCustomer: true,
           time: formatTime(new Date()),
-          read: true,
+          read: false,
         },
       ]);
-    }, 2200);
+
+      setIsTyping(true);
+      setTimeout(() => {
+        setIsTyping(false);
+        const reply = "Thank you for reaching out! Our support team will review this and get back to you.";
+        setChatMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            text: reply,
+            isCustomer: false,
+            time: formatTime(new Date()),
+            read: true,
+          },
+        ]);
+      }, 2200);
+    }
   };
 
   return (

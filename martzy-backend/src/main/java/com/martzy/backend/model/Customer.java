@@ -39,4 +39,16 @@ public class Customer {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "profile_pic")
+    private String profilePic;
+
+    @Column(name = "date_of_birth")
+    private String dateOfBirth;
+
+    private String gender;
+
+    @org.hibernate.annotations.UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

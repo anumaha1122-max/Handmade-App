@@ -927,6 +927,7 @@ import MyOrdersScreen from "../screens/customer/CustomerMyOrdersScreen";
 import OrderDetailScreen from "../screens/customer/CustomerOrderDetailScreen";
 import CustomerSavedAddressScreen from "../screens/customer/CustomerSavedAddressScreen";
 import CustomerChatSupportScreen from "../screens/customer/CustomerChatSupportScreen";
+import RazorpayPaymentScreen from "../screens/customer/RazorpayPaymentScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -968,6 +969,11 @@ function CommonCustomerScreens() {
       <Stack.Screen
         name="CustomerChatSupport"
         component={CustomerChatSupportScreen}
+      />
+
+      <Stack.Screen
+        name="RazorpayPayment"
+        component={RazorpayPaymentScreen}
       />
     </>
   );
@@ -1025,6 +1031,11 @@ function HomeStack() {
         name="CustomerEditProfile"
         component={CustomerEditProfile}
       />
+
+      <Stack.Screen
+        name="RazorpayPayment"
+        component={RazorpayPaymentScreen}
+      />
     </Stack.Navigator>
   );
 }
@@ -1078,6 +1089,11 @@ function ShopStack() {
       <Stack.Screen
         name="CustomerEditProfile"
         component={CustomerEditProfile}
+      />
+
+      <Stack.Screen
+        name="RazorpayPayment"
+        component={RazorpayPaymentScreen}
       />
     </Stack.Navigator>
   );

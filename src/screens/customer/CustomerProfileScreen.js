@@ -2266,29 +2266,44 @@ export default function CustomerProfileScreen({
   const {
     cartCount = 0,
     wishlistCount = 0,
+    currentCustomer,
+    logoutCustomer,
+    orders: customerOrders = [],
+    addresses = [],
+    syncCustomerData,
+    authToken,
   } = useShop();
 
-  const [profile, setProfile] =
-    useState(defaultProfile);
+  // Build profile from context (live data) or fallback to defaults
+  const [profile, setProfile] = useState(defaultProfile);
 
-  const [orders] = useState(defaultOrders);
+  const [notifications] = useState(customerNotifications);
 
-  const [notifications] = useState(
-    customerNotifications
-  );
-
-  const [avatarLoading, setAvatarLoading] =
-    useState(false);
-
-  const [photoModalVisible, setPhotoModalVisible] =
-    useState(false);
-
-  const [logoutModalVisible, setLogoutModalVisible] =
-    useState(false);
-
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const [photoModalVisible, setPhotoModalVisible] = useState(false);
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [message, setMessage] = useState("");
 
-  /* PROFILE UPDATE */
+  // Sync profile from currentCustomer whenever it changes
+  useEffect(() => {
+    if (currentCustomer) {
+      setProfile((prev) => ({
+        ...prev,
+        name: currentCustomer.fullName || currentCustomer.name || prev.name,
+        email: currentCustomer.email || prev.email,
+        phone: currentCustomer.phone || prev.phone,
+      }));
+    }
+  }, [currentCustomer]);
+
+  // Sync on mount if we have a token
+  useEffect(() => {
+    if (authToken && syncCustomerData) {
+      syncCustomerData(authToken);
+    }
+  }, []);
+
+  /* PROFILE UPDATE from navigation params */
   useEffect(() => {
     if (route?.params?.updatedProfile) {
       setProfile((prev) => ({
@@ -2418,7 +2433,8 @@ export default function CustomerProfileScreen({
 
   const handleLogout = () => {
     setLogoutModalVisible(false);
-
+    // Clear all customer state in context (token, cart, wishlist, orders)
+    if (logoutCustomer) logoutCustomer();
     navigation.reset({
       index: 0,
       routes: [
@@ -2432,11 +2448,11 @@ export default function CustomerProfileScreen({
   const menuItems = [
     {
       title: "My Orders",
-      subtitle: `${orders.length} total orders`,
+      subtitle: `${customerOrders.length} total orders`,
       icon: "bag-handle-outline",
       color: "#7C3AED",
       onPress: () =>
-        goToScreen("MyOrders", { orders }),
+        goToScreen("MyOrders", { orders: customerOrders }),
     },
 
     {
@@ -2459,9 +2475,7 @@ export default function CustomerProfileScreen({
 
     {
       title: "Saved Addresses",
-      subtitle: `${
-        profile.addresses?.length || 0
-      } addresses saved`,
+      subtitle: `${addresses.length} addresses saved`,
       icon: "location-outline",
       color: "#10B981",
       onPress: () =>
@@ -2638,9 +2652,10 @@ export default function CustomerProfileScreen({
           <View style={styles.statsRow}>
             <TouchableOpacity
               style={styles.statCard}
+              onPress={() => goToScreen("MyOrders", { orders: customerOrders })}
             >
               <Text style={styles.statValue}>
-                {orders.length}
+                {customerOrders.length}
               </Text>
 
               <Text style={styles.statLabel}>
@@ -2650,6 +2665,7 @@ export default function CustomerProfileScreen({
 
             <TouchableOpacity
               style={styles.statCard}
+              onPress={() => navigation.navigate("WishlistTab")}
             >
               <Text style={styles.statValue}>
                 {wishlistCount}
@@ -2662,6 +2678,7 @@ export default function CustomerProfileScreen({
 
             <TouchableOpacity
               style={styles.statCard}
+              onPress={() => navigation.navigate("CartTab")}
             >
               <Text style={styles.statValue}>
                 {cartCount}

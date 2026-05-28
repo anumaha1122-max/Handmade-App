@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useShop } from '../../context/ShopContext';
 
 const C = {
   primary: '#0e3243',
@@ -11,19 +12,16 @@ const C = {
   bg: '#f4f6f9',
 };
 
-const complaints = [
-  { id: '1', product: 'Wireless Headphones', issue: 'Poor condition', description: 'The product arrived damaged and is not working.' },
-  { id: '2', product: 'Smart Watch', issue: 'Delivery issue', description: 'The product was delivered late and was missing accessories.' },
-];
-
 export default function AdminComplaintReviewScreen({ navigation }) {
+  const { complaints = [], resolveComplaint = () => {} } = useShop();
+
   const handleResolveComplaint = (complaintId) => {
     Alert.alert('Resolve Complaint', 'Mark this complaint as resolved?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Resolve',
         onPress: () => {
-          // Logic to resolve the complaint
+          resolveComplaint(complaintId);
           Alert.alert('Complaint Resolved', 'The complaint has been resolved and the seller has been informed.');
         },
       },
@@ -43,22 +41,26 @@ export default function AdminComplaintReviewScreen({ navigation }) {
       </View>
 
       <ScrollView style={styles.scroll}>
-        {complaints.map((complaint) => (
-          <View key={complaint.id} style={styles.complaintCard}>
-            <Text style={styles.productName}>Product: {complaint.product}</Text>
-            <Text style={styles.issue}>Issue: {complaint.issue}</Text>
-            <Text style={styles.description}>Description: {complaint.description}</Text>
+        {complaints.length === 0 ? (
+          <Text style={{ textAlign: "center", marginTop: 40, color: C.muted }}>No complaints available.</Text>
+        ) : (
+          complaints.map((complaint) => (
+            <View key={complaint.id} style={styles.complaintCard}>
+              <Text style={styles.productName}>Product: {complaint.product || "Product"}</Text>
+              <Text style={styles.issue}>Issue: {complaint.title || complaint.issue || "Issue"}</Text>
+              <Text style={styles.description}>Description: {complaint.description}</Text>
 
-            <View style={styles.actionRow}>
-              <TouchableOpacity
-                style={styles.resolveBtn}
-                onPress={() => handleResolveComplaint(complaint.id)}
-              >
-                <Text style={styles.resolveText}>Resolve</Text>
-              </TouchableOpacity>
+              <View style={styles.actionRow}>
+                <TouchableOpacity
+                  style={styles.resolveBtn}
+                  onPress={() => handleResolveComplaint(complaint.complaintId || complaint.id)}
+                >
+                  <Text style={styles.resolveText}>Resolve</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        ))}
+          ))
+        )}
       </ScrollView>
     </View>
   );

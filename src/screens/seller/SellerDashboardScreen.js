@@ -2,7 +2,7 @@
 
 // src/screens/seller/SellerDashboardScreen.js
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,8 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { useShop } from "../../context/ShopContext";
+import { useFocusEffect } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
 
@@ -68,33 +70,35 @@ function PressableScale({ children, onPress, style }) {
 }
 
 export default function SellerDashboardScreen({ navigation }) {
+  const { fetchSellerData, sellerStats, complaints = [] } = useShop();
+
   const [selectedTab, setSelectedTab] = useState("Dashboard");
 
   const stats = [
     {
       title: "Orders",
-      value: "1",
+      value: sellerStats?.totalOrders?.toString() || "0",
       icon: "bag-handle-outline",
       color: COLORS.blue,
       screen: "SellerOrdersScreen",
     },
     {
       title: "Live",
-      value: "2",
+      value: sellerStats?.liveProducts?.toString() || "0",
       icon: "eye-outline",
       color: COLORS.green,
       screen: "MyProductsScreen",
     },
     {
       title: "Returns",
-      value: "18",
+      value: sellerStats?.returns?.toString() || "0",
       icon: "return-up-back-outline",
       color: COLORS.orange,
       screen: "SellerReturnScreen",
     },
     {
       title: "Pending",
-      value: "1",
+      value: sellerStats?.processing?.toString() || "0",
       icon: "time-outline",
       color: COLORS.purple,
       screen: "SellerOrdersScreen",
@@ -173,6 +177,12 @@ export default function SellerDashboardScreen({ navigation }) {
 
   const bars = useMemo(() => [40, 60, 35, 82, 42, 95, 70], []);
 
+  useFocusEffect(
+    useCallback(() => {
+      if (fetchSellerData) fetchSellerData();
+    }, [fetchSellerData])
+  );
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.bg} />
@@ -210,9 +220,11 @@ export default function SellerDashboardScreen({ navigation }) {
                 size={21}
                 color={COLORS.danger}
               />
-              <View style={[styles.badge, { backgroundColor: "#FF4D4F" }]}>
-                <Text style={styles.badgeText}>5</Text>
-              </View>
+              {complaints.length > 0 && (
+                <View style={[styles.badge, { backgroundColor: "#FF4D4F" }]}>
+                  <Text style={styles.badgeText}>{complaints.length}</Text>
+                </View>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -231,7 +243,7 @@ export default function SellerDashboardScreen({ navigation }) {
         >
           <View style={{ flex: 1 }}>
             <Text style={styles.earningTitle}>Total Earnings</Text>
-            <Text style={styles.earningAmount}>₹1,125</Text>
+            <Text style={styles.earningAmount}>₹{sellerStats?.totalEarnings || 0}</Text>
             <View style={styles.growthRow}>
               <Ionicons name="trending-up" size={15} color="#34D399" />
               <Text style={styles.growthText}>12.8% from last month</Text>
@@ -311,7 +323,7 @@ export default function SellerDashboardScreen({ navigation }) {
               <Text style={styles.salesTitle}>Sales Overview</Text>
               <Text style={styles.weekText}>This Week</Text>
             </View>
-            <Text style={styles.salesAmount}>₹8,645</Text>
+            <Text style={styles.salesAmount}>₹{sellerStats?.totalEarnings || 0}</Text>
             <Text style={styles.salesGrowth}>↑ 18.6% from last week</Text>
             <View style={styles.chart}>
               {bars.map((bar, index) => (
@@ -375,7 +387,7 @@ export default function SellerDashboardScreen({ navigation }) {
             <Ionicons name="shield-outline" size={26} color="#EF4444" />
             <View style={{ marginLeft: 12 }}>
               <Text style={styles.notifyTitle}>Complaint Notifications</Text>
-              <Text style={styles.notifySub}>2 new complaints received</Text>
+              <Text style={styles.notifySub}>{complaints.length > 0 ? `${complaints.length} complaints received` : "No new complaints"}</Text>
             </View>
           </TouchableOpacity>
 

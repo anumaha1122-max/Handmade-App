@@ -1,6 +1,6 @@
 
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Platform,
   Image,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useShop } from "../../context/ShopContext";
 
@@ -31,8 +32,14 @@ const formatPrice = (value) =>
   `₹${Number(value || 0).toLocaleString("en-IN")}`;
 
 export default function MyProductsScreen({ navigation }) {
-  const { sellerProducts, toggleSellerProductActive, deleteSellerProduct } =
+  const { sellerProducts, toggleSellerProductActive, deleteSellerProduct, fetchSellerData } =
     useShop();
+
+  useFocusEffect(
+    useCallback(() => {
+      if (fetchSellerData) fetchSellerData();
+    }, [fetchSellerData])
+  );
 
   const [tab, setTab] = useState("All");
 

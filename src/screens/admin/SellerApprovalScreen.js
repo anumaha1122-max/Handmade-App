@@ -49,7 +49,12 @@ export default function SellerApprovalScreen({ navigation }) {
     rejectedSellers = [],
     approveSeller,
     rejectSeller,
+    fetchAllSellers,
   } = useShop();
+
+  React.useEffect(() => {
+    fetchAllSellers?.();
+  }, [fetchAllSellers]);
 
   const [tab,             setTab]             = useState("Pending");
   const [loading,         setLoading]         = useState(false);
@@ -92,7 +97,7 @@ export default function SellerApprovalScreen({ navigation }) {
 
   /** Full detail page for any seller */
   const goToDetails = useCallback(
-    (seller) => navigation.navigate("SellerDetailsScreen", { seller }),
+    (seller) => navigation.navigate("SellerDetails", { seller }),
     [navigation]
   );
 
@@ -109,44 +114,44 @@ export default function SellerApprovalScreen({ navigation }) {
   /** Admin: seller's product list */
   const goToSellerProducts = useCallback(
     (seller) =>
-      navigation.navigate("AdminSellerProductsScreen", {
-        sellerId:   getSellerId(seller),
-        sellerName: seller?.shopName ?? seller?.name ?? "Seller",
-        seller,
-      }),
+      navigation.navigate("ManageProducts", {
+          sellerId:   getSellerId(seller),
+          sellerName: seller?.shopName ?? seller?.name ?? "Seller",
+          seller,
+        }),
     [navigation]
   );
 
   /** Admin: orders placed with this seller */
   const goToSellerOrders = useCallback(
     (seller) =>
-      navigation.navigate("AdminSellerOrdersScreen", {
-        sellerId:   getSellerId(seller),
-        sellerName: seller?.shopName ?? seller?.name ?? "Seller",
-        seller,
-      }),
+      navigation.navigate("ManageOrders", {
+          sellerId:   getSellerId(seller),
+          sellerName: seller?.shopName ?? seller?.name ?? "Seller",
+          seller,
+        }),
     [navigation]
   );
 
   /** Admin: complaints against this seller */
   const goToSellerComplaints = useCallback(
     (seller) =>
-      navigation.navigate("AdminSellerComplaintsScreen", {
-        sellerId:   getSellerId(seller),
-        sellerName: seller?.shopName ?? seller?.name ?? "Seller",
-        seller,
-      }),
+      navigation.navigate("AdminComplaintReviewScreen", {
+          sellerId:   getSellerId(seller),
+          sellerName: seller?.shopName ?? seller?.name ?? "Seller",
+          seller,
+        }),
     [navigation]
   );
 
   /** Admin: payout / commission detail for this seller */
   const goToSellerPayouts = useCallback(
     (seller) =>
-      navigation.navigate("AdminSellerPayoutsScreen", {
-        sellerId:   getSellerId(seller),
-        sellerName: seller?.shopName ?? seller?.name ?? "Seller",
-        seller,
-      }),
+      navigation.navigate("AdminPayoutsScreen", {
+          sellerId:   getSellerId(seller),
+          sellerName: seller?.shopName ?? seller?.name ?? "Seller",
+          seller,
+        }),
     [navigation]
   );
 

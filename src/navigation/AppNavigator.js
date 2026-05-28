@@ -51,6 +51,7 @@ import CartScreen from "../screens/customer/CartScreen";
 
 // Admin Screens
 import AdminLoginScreen from "../screens/admin/AdminLoginScreen";
+import ForgotPasswordScreen from "../screens/admin/ForgotPasswordScreen";
 import AdminDashboardScreen from "../screens/admin/AdminDashboardScreen";
 import AdminProfileScreen from "../screens/admin/AdminProfileScreen";
 import AdminNotificationsScreen from "../screens/admin/AdminNotificationsScreen";
@@ -58,13 +59,14 @@ import ManageUsersScreen from "../screens/admin/ManageUsersScreen";
 import ManageSellersScreen from "../screens/admin/ManageSellersScreen";
 import ManageProductsScreen from "../screens/admin/ManageProductsScreen";
 import ManageOrdersScreen from "../screens/admin/ManageOrdersScreen";
+import AdminComplaintReviewScreen from "../screens/admin/AdminComplaintReviewScreen";
+import AdminProductDetailsScreen from "../screens/admin/AdminProductDetailsScreen";
 import AdminCommissionScreen from "../screens/admin/AdminCommissionScreen";
 import AdminReportsScreen from "../screens/admin/AdminReportsScreen";
-import AdminPayoutsScreen from "../screens/admin/AdmitPayoutsScreen";
+import AdminPayoutsScreen from "../screens/admin/AdminPayoutsScreen"; // ✅ FIXED typo
 import SellerApprovalScreen from "../screens/admin/SellerApprovalScreen";
 import SellerDetailsScreen from "../screens/admin/SellerDetailsScreen";
 import SellerDocumentsScreen from "../screens/admin/SellerDocumentsScreen";
-import AdminComplaintReviewScreen from "../screens/admin/AdminComplaintReviewScreen";
 
 // Navigators
 import SellerTabNavigator from "./SellerTabNavigator";
@@ -185,6 +187,11 @@ export default function AppNavigator() {
             options={{ animationEnabled: false }}
           />
           <Stack.Screen
+            name="ForgotPassword"
+            component={ForgotPasswordScreen}
+            options={{ animationEnabled: true }}
+          />
+          <Stack.Screen
             name="AdminTabs"
             component={AdminTabNavigator}
             options={{ animationEnabled: false }}
@@ -196,11 +203,14 @@ export default function AppNavigator() {
           <Stack.Screen name="ManageOrders" component={ManageOrdersScreen} />
           <Stack.Screen name="AdminCommission" component={AdminCommissionScreen} />
           <Stack.Screen name="AdminReports" component={AdminReportsScreen} />
+
+          <Stack.Screen name="AdminProductDetailsScreen" component={AdminProductDetailsScreen} />
           <Stack.Screen name="AdminComplaintReviewScreen" component={AdminComplaintReviewScreen} />
-          <Stack.Screen name="SellerDocumentsScreen" component={SellerDocumentsScreen} />
-          <Stack.Screen name="AdminPayouts" component={AdminPayoutsScreen} />
+
+          <Stack.Screen name="AdminPayoutsScreen" component={AdminPayoutsScreen} />
           <Stack.Screen name="SellerApprovals" component={SellerApprovalScreen} />
           <Stack.Screen name="SellerDetails" component={SellerDetailsScreen} />
+          <Stack.Screen name="SellerDocumentsScreen" component={SellerDocumentsScreen} />
           <Stack.Screen name="AdminProfile" component={AdminProfileScreen} />
           <Stack.Screen name="AdminNotifications" component={AdminNotificationsScreen} />
         </Stack.Navigator>

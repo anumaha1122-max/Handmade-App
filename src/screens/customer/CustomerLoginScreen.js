@@ -1,6 +1,6 @@
 
 
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,12 +8,19 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/colors";  // Ensure COLORS are correctly imported
+import { useShop } from "../../context/ShopContext";
 
 export default function CustomerLoginScreen({ navigation, route }) {
   const role = route.params?.role || "customer";  // Default to 'customer' if no role is passed
+  const { loginCustomer, loginSeller } = useShop();
+
+  const [emailOrPhone, setEmailOrPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // Role configuration for different login flows
   const roleConfig = {
@@ -37,9 +44,37 @@ export default function CustomerLoginScreen({ navigation, route }) {
   const current = roleConfig[role];  // Get the current role configuration
 
   // Login handler function
-  const handleLogin = () => {
-    // Replace the current screen with the next screen based on the role
-    navigation.replace(current.next);  // Navigates to the appropriate tab (CustomerTabs, SellerTabs, AdminTabs)
+  const handleLogin = async () => {
+    if (!emailOrPhone.trim() || !password) {
+      Alert.alert("Error", "Please enter credentials.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (role === "customer") {
+        const res = await loginCustomer(emailOrPhone.trim(), password);
+        if (res && !res.error) {
+          navigation.replace(current.next);
+        } else {
+          Alert.alert("Login Failed", res?.message || "Invalid credentials.");
+        }
+      } else if (role === "seller") {
+        const res = await loginSeller(emailOrPhone.trim(), password);
+        if (res && !res.error) {
+          navigation.replace(current.next);
+        } else {
+          Alert.alert("Login Failed", res?.message || "Invalid credentials.");
+        }
+      } else {
+        // Admin fallback
+        navigation.replace(current.next);
+      }
+    } catch (err) {
+      Alert.alert("Error", "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -63,6 +98,9 @@ export default function CustomerLoginScreen({ navigation, route }) {
           style={styles.input}
           placeholder="Email or Phone"
           keyboardType="email-address"  // Set the keyboard type to email
+          value={emailOrPhone}
+          onChangeText={setEmailOrPhone}
+          autoCapitalize="none"
         />
 
         {/* Password Input */}
@@ -70,14 +108,18 @@ export default function CustomerLoginScreen({ navigation, route }) {
           style={styles.input}
           placeholder="Password"
           secureTextEntry  // Mask the password input
+          value={password}
+          onChangeText={setPassword}
+          autoCapitalize="none"
         />
 
         {/* LOGIN BUTTON */}
         <TouchableOpacity
           style={[styles.loginBtn, { backgroundColor: current.color }]}  // Dynamic background color based on role
           onPress={handleLogin}  // Handle login and navigate
+          disabled={loading}
         >
-          <Text style={styles.loginText}>Login</Text>
+          <Text style={styles.loginText}>{loading ? "Signing in..." : "Login"}</Text>
         </TouchableOpacity>
 
         <Text style={styles.or}>or continue with</Text>

@@ -233,8 +233,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+
+
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -255,18 +255,24 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    // ── Auth ──
-                    "/api/customer/register",
-                    "/api/customer/login",
-                    "/api/seller/register",
-                    "/api/seller/login",
-                    // ── Public product listing (no login needed for customers) ──
-                    "/api/products/all",
+                    // ── Customer APIs (Auth & Profile/Cart/Orders) ──
+                    "/api/customer/**",
+                    // ── Product APIs (Public listing & Seller management) ──
+                    "/api/products/**",
+                    // ── Seller APIs ──
+                    "/api/seller/**",
                     // ── Admin ──
                     "/api/admin/**",
+                    // ── Post-Order Support (Returns, Complaints, Messages, Reviews) ──
+                    "/api/returns/**",
+                    "/api/complaints/**",
+                    "/api/messages/**",
+                    "/api/reviews/**",
                     // ── File serving ──
                     "/uploads/**",
-                    "/api/files/**"
+                    "/api/files/**",
+                    // ── Error endpoint ──
+                    "/error"
                 ).permitAll()
                 .anyRequest().authenticated()
             );
@@ -286,8 +292,5 @@ public class SecurityConfig {
         return source;
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+// PasswordEncoder bean moved to PasswordConfig
 }

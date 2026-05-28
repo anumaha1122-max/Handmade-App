@@ -6,7 +6,9 @@ import com.martzy.backend.dto.AdminResetPasswordDTO;
 import com.martzy.backend.service.AdminService;
 import jakarta.validation.Valid;
 import com.martzy.backend.model.Seller;
+import com.martzy.backend.model.Order;
 import com.martzy.backend.repository.SellerRepository;
+import com.martzy.backend.repository.OrderRepository;
 import com.martzy.backend.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,11 +24,12 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-@SuppressWarnings("null")
+
 public class AdminController {
 
     private final SellerRepository sellerRepository;
     private final AdminService adminService;
+    private final OrderRepository orderRepository;
 
     // ── POST /api/admin/login ─────────────────────────────────────────────────
     @PostMapping("/login")
@@ -54,6 +57,16 @@ public class AdminController {
         ApiResponse response = adminService.resetPassword(dto.getEmail(), dto.getToken(), dto.getNewPassword());
         int status = response.isSuccess() ? 200 : 400;
         return ResponseEntity.status(status).body(response);
+    }
+
+    // ── GET /api/admin/orders ─────────────────────────────────────────────────
+    // Returns all platform orders for the admin dashboard
+    @GetMapping("/orders")
+    public ResponseEntity<ApiResponse> getAllOrders() {
+        List<Order> allOrders = orderRepository.findAllByOrderByCreatedAtDesc();
+        return ResponseEntity.ok(
+                ApiResponse.ok("Orders fetched successfully.", allOrders, null)
+        );
     }
 
     // ── GET /api/admin/sellers/pending ────────────────────────────────────────

@@ -165,6 +165,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import { useShop } from "../../context/ShopContext";
 
 const C = {
   primary: "#0E3243",
@@ -199,6 +200,7 @@ const getImageSource = (image) => {
 };
 
 export default function CustomerComplaintScreen({ navigation, route }) {
+  const { submitComplaint } = useShop();
   const orderId = route?.params?.orderId || "Not available";
   const product = route?.params?.product || {};
   const orderStatus = route?.params?.orderStatus || "Delivered";
@@ -240,7 +242,7 @@ export default function CustomerComplaintScreen({ navigation, route }) {
     );
   };
 
-  const handleSubmitComplaint = () => {
+  const handleSubmitComplaint = async () => {
     if (!complaintType.trim()) {
       setError("Please select a complaint type.");
       return;
@@ -252,7 +254,20 @@ export default function CustomerComplaintScreen({ navigation, route }) {
     }
 
     setError("");
-    setSuccessVisible(true);
+    try {
+      await submitComplaint({
+        title: complaintType.trim(),
+        description: description.trim(),
+        orderId,
+        productName: product?.name || product?.title || "",
+        customer: "Customer",
+        sellerId: product?.sellerId || null,
+        sellerName: product?.seller || product?.sellerName || "Seller"
+      });
+      setSuccessVisible(true);
+    } catch (err) {
+      setError("An error occurred while submitting your complaint.");
+    }
   };
 
   const closeSuccess = () => {

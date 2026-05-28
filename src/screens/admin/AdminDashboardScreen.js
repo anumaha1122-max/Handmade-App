@@ -49,7 +49,12 @@ export default function AdminDashboardScreen({
     complaints = [],
     totalAdminCommission = 0,
     orders = [],
+    fetchAllSellers,
   } = useShop();
+
+  React.useEffect(() => {
+    fetchAllSellers?.();
+  }, [fetchAllSellers]);
 
   const totalProducts =
     sellerProducts.length;

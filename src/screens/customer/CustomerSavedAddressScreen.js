@@ -36,32 +36,6 @@ const ADDRESS_TYPES = [
   { key: "other", label: "Other", icon: "location-outline", activeIcon: "location" },
 ];
 
-const INITIAL_ADDRESSES = [
-  {
-    id: "1",
-    type: "home",
-    name: "Arjun Reddy",
-    phone: "+91 98765 43210",
-    line1: "Flat 4B, Srinivasa Residency",
-    line2: "Banjara Hills, Road No. 12",
-    city: "Hyderabad",
-    state: "Telangana",
-    pincode: "500034",
-    isDefault: true,
-  },
-  {
-    id: "2",
-    type: "work",
-    name: "Arjun Reddy",
-    phone: "+91 98765 43210",
-    line1: "Tower B, 5th Floor, Cyber Towers",
-    line2: "HITEC City",
-    city: "Hyderabad",
-    state: "Telangana",
-    pincode: "500081",
-    isDefault: false,
-  },
-];
 
 const EMPTY_FORM = {
   type: "home",
@@ -611,11 +585,22 @@ function EmptyState({ onAdd }) {
 }
 
 export default function CustomerSavedAddressScreen({ navigation }) {
-  const { cartCount = 0, wishlistCount = 0 } = useShop() || {};
+  const {
+    addresses = [],
+    fetchAddresses = () => {},
+    addAddress = () => {},
+    updateAddress = () => {},
+    deleteAddress = () => {},
+    cartCount = 0,
+    wishlistCount = 0,
+  } = useShop() || {};
 
-  const [addresses, setAddresses] = useState(INITIAL_ADDRESSES);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
+
+  useEffect(() => {
+    fetchAddresses();
+  }, [fetchAddresses]);
 
   const openAdd = () => {
     setEditingAddress(null);
@@ -635,56 +620,23 @@ export default function CustomerSavedAddressScreen({ navigation }) {
     navigation.navigate(WISHLIST_ROUTE);
   };
 
-  const handleDelete = (id) => {
-    setAddresses((prev) => {
-      const filtered = prev.filter((a) => a.id !== id);
-
-      if (filtered.length > 0 && !filtered.some((a) => a.isDefault)) {
-        filtered[0] = { ...filtered[0], isDefault: true };
-      }
-
-      return filtered;
-    });
+  const handleDelete = async (id) => {
+    await deleteAddress(id);
   };
 
-  const handleSetDefault = (id) => {
-    setAddresses((prev) =>
-      prev.map((a) => ({ ...a, isDefault: a.id === id }))
-    );
-  };
-
-  const handleSave = (form) => {
-    if (editingAddress) {
-      setAddresses((prev) => {
-        let updated = prev.map((a) =>
-          a.id === editingAddress.id ? { ...form, id: a.id } : a
-        );
-
-        if (form.isDefault) {
-          updated = updated.map((a) => ({
-            ...a,
-            isDefault: a.id === editingAddress.id,
-          }));
-        }
-
-        if (!updated.some((a) => a.isDefault) && updated.length > 0) {
-          updated[0] = { ...updated[0], isDefault: true };
-        }
-
-        return updated;
-      });
-    } else {
-      const newId = Date.now().toString();
-
-      setAddresses((prev) => {
-        const cleared = form.isDefault
-          ? prev.map((a) => ({ ...a, isDefault: false }))
-          : prev;
-
-        return [...cleared, { ...form, id: newId }];
-      });
+  const handleSetDefault = async (id) => {
+    const addr = addresses.find((a) => a.id === id);
+    if (addr) {
+      await updateAddress(id, { ...addr, isDefault: true });
     }
+  };
 
+  const handleSave = async (form) => {
+    if (editingAddress) {
+      await updateAddress(editingAddress.id, form);
+    } else {
+      await addAddress(form);
+    }
     setModalVisible(false);
   };
 

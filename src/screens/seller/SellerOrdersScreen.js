@@ -783,7 +783,7 @@
 
 // screens/seller/SellerOrdersScreen.js
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -796,6 +796,7 @@ import {
   Image,
   SafeAreaView,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useShop } from "../../context/ShopContext";
 
@@ -844,7 +845,14 @@ export default function SellerOrdersScreen({ navigation }) {
     returnRequests = [],
     updateOrderStatus = () => {},
     updateDeliveryStatus = () => {},
+    fetchSellerData,
   } = shop;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (fetchSellerData) fetchSellerData();
+    }, [fetchSellerData])
+  );
 
   const [tab, setTab] = useState("All");
   const [search, setSearch] = useState("");

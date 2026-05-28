@@ -35,64 +35,20 @@ const COLORS = {
   cancelledText: "#DC2626",
 };
 
-const filters = ["All Orders", "Processing", "Shipped", "Delivered", "Cancelled"];
+import { useShop } from "../../context/ShopContext";
 
-const orders = [
-  {
-    id: "#ORD123456",
-    title: "Hand Embroidered Kurti",
-    qty: 1,
-    size: "M",
-    price: "₹899",
-    date: "12 May 2024",
-    time: "10:30 AM",
-    status: "Processing",
-    payment: "Cash on Delivery",
-    image: require("../../../assets/images/kurti.png"),
-  },
-  {
-    id: "#ORD123455",
-    title: "Homemade Besan Ladoo",
-    qty: 1,
-    price: "₹350",
-    date: "10 May 2024",
-    time: "06:15 PM",
-    status: "Shipped",
-    payment: "Cash on Delivery",
-    image: require("../../../assets/images/ladoo.png"),
-  },
-  {
-    id: "#ORD123454",
-    title: "Handmade Rakhi",
-    qty: 2,
-    price: "₹240",
-    date: "8 May 2024",
-    time: "11:20 AM",
-    status: "Delivered",
-    deliveredDate: "10 May 2024",
-    payment: "UPI Paid",
-    image: require("../../../assets/images/rakhi.png"),
-  },
-  {
-    id: "#ORD123453",
-    title: "Homemade Mango Pickle",
-    qty: 1,
-    price: "₹250",
-    date: "5 May 2024",
-    time: "02:45 PM",
-    status: "Cancelled",
-    payment: "Cash on Delivery",
-    image: require("../../../assets/images/mango-pickle.png"),
-  },
-];
+const filters = ["All Orders", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
 
-export default function CustomerMyOrdersScreen({ navigation }) {
+export default function CustomerMyOrdersScreen({ navigation, route }) {
+  const { orders: contextOrders = [], cartCount = 0 } = useShop() || {};
+  const orders = route?.params?.orders || contextOrders;
+
   const [activeFilter, setActiveFilter] = useState("All Orders");
 
   const filteredOrders = useMemo(() => {
     if (activeFilter === "All Orders") return orders;
     return orders.filter((item) => item.status === activeFilter);
-  }, [activeFilter]);
+  }, [activeFilter, orders]);
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -111,47 +67,16 @@ export default function CustomerMyOrdersScreen({ navigation }) {
 
   const buildOrderForDetails = (item) => ({
     ...item,
-    products: [
-      {
-        id: item.id,
-        productId: item.id,
-        name: item.title,
-        title: item.title,
-        qty: item.qty,
-        quantity: item.qty,
-        size: item.size,
-        price: item.price,
-        finalPrice: item.price,
-        image: item.image,
-        seller: "Bliss Handmade Store",
-        sellerName: "Bliss Handmade Store",
-      },
-    ],
-    items: [
-      {
-        id: item.id,
-        productId: item.id,
-        name: item.title,
-        title: item.title,
-        qty: item.qty,
-        quantity: item.qty,
-        size: item.size,
-        price: item.price,
-        finalPrice: item.price,
-        image: item.image,
-        seller: "Bliss Handmade Store",
-        sellerName: "Bliss Handmade Store",
-      },
-    ],
-    totalAmount: item.price,
+    products: item.products || [],
+    items: item.products || [],
+    totalAmount: item.totalAmount,
     payment: item.payment || "Cash on Delivery",
-    address: {
+    address: item.address || {
       name: "Customer",
-      line1: "Saved delivery address",
-      line2: "",
-      city: "Hyderabad",
-      state: "Telangana",
-      pincode: "500001",
+      line1: "Delivery address",
+      city: "City",
+      state: "State",
+      pincode: "000000",
     },
   });
 
@@ -186,9 +111,11 @@ export default function CustomerMyOrdersScreen({ navigation }) {
 
         <TouchableOpacity style={styles.cartBtn} activeOpacity={0.85} onPress={handleCartPress}>
           <Ionicons name="cart-outline" size={26} color="#111" />
-          <View style={styles.cartBadge}>
-            <Text style={styles.cartBadgeText}>3</Text>
-          </View>
+          {cartCount > 0 && (
+            <View style={styles.cartBadge}>
+              <Text style={styles.cartBadgeText}>{cartCount}</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -216,6 +143,15 @@ export default function CustomerMyOrdersScreen({ navigation }) {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {filteredOrders.map((item) => {
           const statusStyle = getStatusStyle(item.status);
+          
+          const title = item.products && item.products.length > 0 ? item.products[0].name : item.title || "Order";
+          const qty = item.products && item.products.length > 0 ? item.products[0].qty : item.qty || 1;
+          const imgPath = item.products && item.products.length > 0 ? item.products[0].image : null;
+          const itemImage = imgPath ? { uri: imgPath } : item.image || require("../../../assets/images/kurti.png");
+          
+          const d = new Date(item.createdAt || item.date || Date.now());
+          const orderDate = d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+          const orderTime = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 
           return (
             <TouchableOpacity
@@ -225,7 +161,7 @@ export default function CustomerMyOrdersScreen({ navigation }) {
               onPress={() => goToOrderDetails(item)}
             >
               <View style={styles.orderTop}>
-                <Image source={item.image} style={styles.productImage} />
+                <Image source={itemImage} style={styles.productImage} />
 
                 <View style={styles.orderInfo}>
                   <View style={styles.orderIdRow}>
@@ -240,15 +176,15 @@ export default function CustomerMyOrdersScreen({ navigation }) {
                   </View>
 
                   <Text style={styles.orderDate}>
-                    {item.date} • {item.time}
+                    {orderDate} • {orderTime}
                   </Text>
 
                   <Text style={styles.productTitle} numberOfLines={2}>
-                    {item.title}
+                    {title}
                   </Text>
 
                   <Text style={styles.productMeta}>
-                    {item.size ? `Size: ${item.size} • ` : ""}Qty: {item.qty}
+                    {item.products?.length > 1 ? `+${item.products.length - 1} more items • ` : ""}Qty: {qty}
                   </Text>
 
                   <Text style={styles.price}>{item.price}</Text>
@@ -257,7 +193,7 @@ export default function CustomerMyOrdersScreen({ navigation }) {
                     <View style={styles.deliveredRow}>
                       <Ionicons name="checkmark-circle" size={18} color="#16A34A" />
                       <Text style={styles.deliveredText}>
-                        Delivered on {item.deliveredDate}
+                        Delivered on {orderDate}
                       </Text>
                     </View>
                   )}

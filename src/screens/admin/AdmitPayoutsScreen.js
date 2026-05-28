@@ -1,7 +1,7 @@
 
 
 
-// src/screens/admin/AdminPayoutsScreen.js
+
 
 import React, { useMemo, useState } from "react";
 import {

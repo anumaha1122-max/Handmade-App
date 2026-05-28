@@ -15,7 +15,6 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("null")
 public class CustomerService {
 
     private final CustomerRepository customerRepository;

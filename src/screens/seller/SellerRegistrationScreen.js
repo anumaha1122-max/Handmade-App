@@ -1103,38 +1103,38 @@ export default function SellerRegistrationScreen({ navigation }) {
       formData.append("password", personal.password);
       formData.append("shopName", business.shopName.trim());
       formData.append("businessType", business.businessType);
-      formData.append("gst", business.gst.trim());
+      formData.append("gstin", business.gst.trim());
       formData.append("description", business.description.trim());
-      formData.append("address1", address.address1.trim());
+      formData.append("address", address.address1.trim());
       formData.append("address2", address.address2.trim());
       formData.append("city", address.city.trim());
       formData.append("state", address.state);
-      formData.append("pin", address.pin.trim());
+      formData.append("pinCode", address.pin.trim());
 
       // Append files
       if (docs.aadhar) {
-        formData.append("aadharFile", {
+        formData.append("aadharDoc", {
           uri: docs.aadhar.uri,
           name: docs.aadhar.fileName || "aadhar.jpg",
           type: "image/jpeg",
         });
       }
       if (docs.pan) {
-        formData.append("panFile", {
+        formData.append("panDoc", {
           uri: docs.pan.uri,
           name: docs.pan.fileName || "pan.jpg",
           type: "image/jpeg",
         });
       }
       if (docs.businessProof) {
-        formData.append("businessProofFile", {
+        formData.append("businessProof", {
           uri: docs.businessProof.uri,
           name: docs.businessProof.fileName || "businessProof.jpg",
           type: "image/jpeg",
         });
       }
       if (docs.bankDetails) {
-        formData.append("bankDetailsFile", {
+        formData.append("bankDetails", {
           uri: docs.bankDetails.uri,
           name: docs.bankDetails.fileName || "bankDetails.jpg",
           type: "image/jpeg",

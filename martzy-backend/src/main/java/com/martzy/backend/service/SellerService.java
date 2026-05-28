@@ -233,7 +233,7 @@ import java.util.Optional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("null")
+
 public class SellerService {
 
     private final SellerRepository sellerRepository;
@@ -352,6 +352,29 @@ public class SellerService {
         return ApiResponse.error("Unexpected error.");
     }
 
+    // ── Profile ────────────────────────────────────────────────────────────
+    public ApiResponse getProfile(String token) {
+        Long sellerId = extractSellerId(token);
+        Seller seller = sellerRepository.findById(sellerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Seller not found."));
+        return ApiResponse.ok("Profile fetched.", safeSeller(seller), null);
+    }
+
+    public ApiResponse updateProfile(String token, String fullName, String shopName, String phone, String address) {
+        Long sellerId = extractSellerId(token);
+        Seller seller = sellerRepository.findById(sellerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Seller not found."));
+
+        if (fullName != null && !fullName.isBlank()) seller.setFullName(fullName);
+        if (shopName != null && !shopName.isBlank()) seller.setShopName(shopName);
+        if (phone != null && !phone.isBlank()) seller.setPhone(phone);
+        if (address != null && !address.isBlank()) seller.setAddress(address);
+
+        sellerRepository.save(seller);
+
+        return ApiResponse.ok("Profile updated successfully.", safeSeller(seller), null);
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────────
     private void logFileInfo(String name, MultipartFile file) {
         if (file == null || file.isEmpty()) {
@@ -359,6 +382,16 @@ public class SellerService {
         } else {
             log.info("[SellerService] File '{}' received — originalName={}, size={}, contentType={}",
                     name, file.getOriginalFilename(), file.getSize(), file.getContentType());
+        }
+    }
+
+    private Long extractSellerId(String bearerToken) {
+        String token = bearerToken.replace("Bearer ", "").trim();
+        String subject = jwtUtil.extractSubject(token);
+        try {
+            return Long.parseLong(subject);
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token.");
         }
     }
 

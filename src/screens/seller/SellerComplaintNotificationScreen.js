@@ -380,6 +380,7 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useShop } from "../../context/ShopContext";
 
 const C = {
   primary: "#082843",
@@ -398,36 +399,12 @@ const C = {
 
 export default function SellerComplaintNotificationScreen({ route, navigation }) {
   const seller = route?.params?.seller ?? { name: "Your Shop" };
-  const complaint = route?.params?.complaint ?? null;
+  const routeComplaint = route?.params?.complaint ?? null;
+  const { complaints: contextComplaints } = useShop();
 
-  const complaints = complaint
-    ? [complaint]
-    : [
-        {
-          id: "CMP001",
-          title: "Product Quality Issue",
-          description:
-            "Customer reported that the product arrived damaged and does not match the description shown in the product listing.",
-          time: "2 hours ago",
-          status: "Pending",
-          orderId: "ORD-1234",
-          customer: "Rahul M.",
-          product: "Handmade Wooden Bowl",
-          priority: "High",
-        },
-        {
-          id: "CMP002",
-          title: "Late Delivery",
-          description:
-            "Order was delivered late. Customer is requesting seller response and possible refund support.",
-          time: "1 day ago",
-          status: "Under Review",
-          orderId: "ORD-1189",
-          customer: "Priya S.",
-          product: "Organic Pickle Pack",
-          priority: "Medium",
-        },
-      ];
+  const complaints = routeComplaint
+    ? [routeComplaint]
+    : contextComplaints;
 
   const getStatusColor = (status) => {
     if (status === "Pending") return C.warning;
@@ -450,7 +427,7 @@ export default function SellerComplaintNotificationScreen({ route, navigation })
   };
 
   const openComplaint = (item) => {
-    navigation.navigate("SellerComplaintDetails", {
+    navigation.navigate("AdminComplaintReviewScreen", {
       complaint: item,
       seller,
     });

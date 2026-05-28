@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@SuppressWarnings("null")
 public class AdminDataSeeder implements ApplicationRunner {
 
     private final AdminRepository adminRepository;
